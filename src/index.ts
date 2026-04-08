@@ -1,4 +1,4 @@
-import { WebSocketServer, type WebSocket } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 
 const wss = new WebSocketServer({port : 8080});
 
@@ -13,6 +13,8 @@ let allSockets : WebSocket[] = [];
 // client on the socket and also can send messages using the same socket object
 
 wss.on("connection", (socket)=>{ 
+    allSockets.push(socket);//pushing all the sockets in the array for broadcasting
+
     userCount += 1;
     console.log("user connected # " + userCount);
 
@@ -20,8 +22,13 @@ wss.on("connection", (socket)=>{
     socket.on("message", (msg)=>{//whenever there is a new message which is coming to the server, call the callback
         console.log("message received " + msg.toString());
         for(let i = 0; i < allSockets.length; i++){
-            const s = allSockets[i];
-             socket.send(msg.toString())
+            //@ts-ignore
+            const s : WebSocket = allSockets[i];
+             s.send(msg.toString())
         }
+    })
+
+    socket.on("disconnect", ()=>{
+        allSockets = allSockets.filter(x => x != socket);
     })
 })
